@@ -24,15 +24,41 @@ public class AuthService {
     private JwtUtil jwtUtil;
 
     public String register(RegisterRequest request) {
+
+        // Basic Null or Empty Checks
+        if (request.getName() == null || request.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be empty");
+        }
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email cannot be empty");
+        }
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be empty");
+        }
+
+        // Check if username is already taken
+        if (userRepository.findByUsername(request.getName()).isPresent()) {
+            throw new IllegalArgumentException("Username is already taken");
+        }
+
+        // Check if email is already registered
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email is already registered");
+        }
+
+        // Everything is valid - proceed to save user
         User user = new User();
-        user.setUsername(request.getName());
+        user.setUsername(request.getName().trim());
+        user.setEmail(request.getEmail().trim());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole("USER");
+
         userRepository.save(user);
 
-        // Generate token
+        // Generate and return token
         return jwtUtil.generateToken(user.getUsername());
     }
+
 
     public String authenticate(AuthRequest request) {
         User user = userRepository.findByUsername(request.getUsername())
