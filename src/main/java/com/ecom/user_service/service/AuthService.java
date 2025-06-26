@@ -23,12 +23,15 @@ public class AuthService {
     @Autowired
     private JwtUtil jwtUtil;
 
-    public void register(RegisterRequest request) {
+    public String register(RegisterRequest request) {
         User user = new User();
-        user.setUsername(request.getUsername());
+        user.setUsername(request.getName());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole("USER");
         userRepository.save(user);
+
+        // Generate token
+        return jwtUtil.generateToken(user.getUsername());
     }
 
     public String authenticate(AuthRequest request) {
