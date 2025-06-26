@@ -5,12 +5,16 @@ import com.ecom.user_service.dto.RegisterRequest;
 import com.ecom.user_service.entity.User;
 import com.ecom.user_service.repository.UserRepository;
 import com.ecom.user_service.util.JwtUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
+@Slf4j
 @Service
 public class AuthService {
 
@@ -61,13 +65,17 @@ public class AuthService {
 
 
     public String authenticate(AuthRequest request) {
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        Optional<User> user = userRepository.findByEmail(request.getEmail());
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if(user.isEmpty()) {
+            throw new UsernameNotFoundException("User not found");
+        }
+
+        if (!passwordEncoder.matches(request.getPassword(), user.get().getPassword())) {
             throw new BadCredentialsException("Invalid credentials");
         }
 
-        return jwtUtil.generateToken(user.getUsername());
+        log.info("Login Successful from backend");
+        return jwtUtil.generateToken(user.get().getUsername());
     }
 }
