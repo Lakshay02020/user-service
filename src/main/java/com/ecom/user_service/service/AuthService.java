@@ -1,6 +1,7 @@
 package com.ecom.user_service.service;
 
 import com.ecom.user_service.dto.AuthRequest;
+import com.ecom.user_service.dto.AuthResponse;
 import com.ecom.user_service.dto.RegisterRequest;
 import com.ecom.user_service.entity.User;
 import com.ecom.user_service.repository.UserRepository;
@@ -10,6 +11,9 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class AuthService {
@@ -23,7 +27,7 @@ public class AuthService {
     @Autowired
     private JwtUtil jwtUtil;
 
-    public String register(RegisterRequest request) {
+    public Map<String, String> register(RegisterRequest request) {
 
         // Basic Null or Empty Checks
         if (request.getName() == null || request.getName().trim().isEmpty()) {
@@ -55,12 +59,15 @@ public class AuthService {
 
         userRepository.save(user);
 
+        Map<String, String> response = new HashMap<>();
+        response.put("token", jwtUtil.generateToken(user.getUsername()));
+        response.put("userId", user.getUserId());
         // Generate and return token
-        return jwtUtil.generateToken(user.getUsername());
+        return response;
     }
 
 
-    public String authenticate(AuthRequest request) {
+    public AuthResponse authenticate(AuthRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
@@ -68,6 +75,6 @@ public class AuthService {
             throw new BadCredentialsException("Invalid credentials");
         }
 
-        return jwtUtil.generateToken(user.getUsername());
+        return new AuthResponse(jwtUtil.generateToken(user.getUsername()), user.getUserId());
     }
 }

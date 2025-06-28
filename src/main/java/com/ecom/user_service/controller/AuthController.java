@@ -26,19 +26,13 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> register(@RequestBody RegisterRequest request) {
         log.info("Request for user registration: {}" ,request);
-        String token = authService.register(request);
-
-        // Prepare response
-        Map<String, String> response = new HashMap<>();
-        response.put("token", token);
-
-        return ResponseEntity.ok(response);
+        return  ResponseEntity.ok(authService.register(request));
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
         log.info("Request for user login: {}" ,request);
-        String token = authService.authenticate(request);
-        return ResponseEntity.ok(new AuthResponse(token));
+        AuthResponse authResponse = authService.authenticate(request);
+        return ResponseEntity.ok(authResponse);
     }
 }
